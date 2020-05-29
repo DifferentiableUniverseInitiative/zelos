@@ -10,8 +10,8 @@ actually run a Boltzmann code anymore.
 
 ## Related work
 
-- [Pico](https://arxiv.org/pdf/0712.0194.pdf)
-- [pyPico](https://github.com/marius311/pypico)
+- [PICO](https://arxiv.org/pdf/0712.0194.pdf)
+- [pyPICO](https://github.com/marius311/pypico)
 
 ...
 
@@ -19,6 +19,29 @@ actually run a Boltzmann code anymore.
 
 In this section we try to identify why previous general purpose emulators
 may not have become more widespread.
+
+### PICO (comments from Marius)
+
+PICO does a global polynomial interpolation in ~10 dimensional parameter space (6 LCDM + ~4 extensions), accurate within a region which roughly covers the _union_ of WMAP and SPT-TT 5σ contours. It is differentiable (although this feature was undocumented).
+
+PICO could be regarded as one of the more succesful emulators as it's the only one which got some built-in support to CosmoMC. To my knowledge, it was very useful to a few people within in Planck during the analysis, has been used in some classes, and gotten the occasional use here and there. It was not used in the final "grid" of Planck chains, which were run with CAMB. It did not otherwise achieve "widespread" use. Some reasons which may have caused this relevant for this project are:
+
+1. Although its accuracy is very good (good enough for Planck), this was not very well documented as I never got around to writing another paper specifically for the most recent trainings I did. I got the sense that people felt compelled to verify the accuracy themselves. 
+
+2. While the training region was big (5σ _WMAP/SPT_ is huge by today's standards), it was not big enough that for some crazy dataset you were testing, or for a normal one but just a few samples in your chain, you didn't leave the training region. 
+
+3. Chains are often far less useful unless they contain "derived" parameters, which PICO does not calculate. 
+
+4. Previous three points combine to say that your analysis code _needed_ a CAMB fallback anyway. Given this, I think the pain of setting up PICO and the logic of switching was often not worth the pain for people rather than just launching CAMB chains and just waiting longer. 
+
+5. Thanks to curse of dimensionality, you probably can't ever train all the extensions people want simultaenously (probably ~20 "extension" parameters in the Planck grid). So you pick subsets and have "datafiles" which people need to remember to switch between for given runs. 
+
+
+Mistake (1) just needs to not be repeated. (5) can probably be alleviated with a better code interface that switches for you. (2) can perhaps be alleviated with smarter emulation and or if your target isn't the CMB, or isn't as big as WMAP/SPT. (3) is fundamental and problematic.
+
+
+Finally, I will mention that training is highly non-trivial in that high dimensions and if your goal is to be accurate enough for Planck. This is of course specific to our polynomial interpolation, but required lots of careful handtuning of the training region (which required running CAMB chains on the targed data in the first place) and picking a physically-motivated transformation of the input and output parameters (e.g. training in θs the sound horizon angular scale as opposed to H₀). Providing a system that makes it trivial for users to compute their own trainings would be effectively impossible in the PICO setup. 
+
 
 
 ## Guiding principles
